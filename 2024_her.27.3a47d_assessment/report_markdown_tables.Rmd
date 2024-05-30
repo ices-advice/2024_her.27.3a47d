@@ -1,0 +1,499 @@
+---
+output:
+  word_document:
+    reference_docx: report_template_v1.5.dotx
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+
+# ------------------------------------------------------------------------------
+# 20/03/2024 Updated for HAWG 2023 (FB); Rmarkdown. 
+# ------------------------------------------------------------------------------
+library(knitr)
+knitr::opts_chunk$set(comment = NA)
+
+library(icesTAF)
+
+taf.library(FLCore)
+taf.library(stockassessment)
+taf.library(FLSAM)
+
+library(tidyverse)
+library(icesSAG)  # install.packages("icesSAG")
+library(pander)
+
+model.path      <- file.path(".",'model')
+output.path      <- file.path(".",'output')
+report.path      <- file.path(".","report")
+
+# Data settings
+
+# single fleet data
+runName <- 'NSAS_HAWG2024'
+wg      <- "HAWG2024"
+
+load(file.path(model.path,paste0(runName,'_sf.RData')))
+name(NSH) <- runName
+
+# multifleet data
+load(file.path(model.path,paste0(runName,'_mf.RData')))
+name(NSH3f) <- runName
+
+load('../2024_her.27.3a47d_forecast/data/input_2024.RData')
+
+rpHAWG2024   <- data.frame(refpoint = c("fmsy",'Fsq','Flim','Fpa',"Blim",'Bpa',"msyBtrigger"),
+                      value    = c(0.32,NA,0.39,0.33,828874,903707,1131601),
+                      wg       = rep("HAWG2024", 7))
+
+rpIBP2021   <- data.frame(refpoint = c("fmsy",'Fsq','Flim','Fpa',"Blim",'Bpa',"msyBtrigger"),
+                      value    = c(0.31,NA,0.4,0.31,874198,956483,1232828),
+                      wg       = rep("IBPNSherring2021", 7))
+
+rpWKPELA2018   <- data.frame(refpoint = c("fmsy",'Fsq','Flim','Fpa',"Blim",'Bpa',"msyBtrigger"),
+                      value    = c(0.26,NA,0.34,0.30,800000,900000,1400000),
+                      wg       = rep("WKPELA2018", 7))
+
+rpAll <- rbind(rpHAWG2024, rpIBP2021,rpWKPELA2018)
+
+rpAll <- rpAll %>% pivot_wider(names_from = refpoint,values_from = value)
+
+panderOptions('keep.line.breaks', TRUE)
+
+```
+
+**Section 2.6.1 Input data**
+
+**Table 2.6.1.2 North Sea herring input data. Maturity at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/maturity.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.3 North Sea herring input data. Natural mortality at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/natmort.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.4 North Sea herring input data. Stock weight at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/wstock.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.5 North Sea herring input data. Catch weight at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/wcatch.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.6 North Sea herring input data. Catch at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/catage.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.7 North Sea herring input data. HERAS survey index at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/survey_heras.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.8 North Sea herring input data. IBTS0 survey index at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/survey_ibts_0.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.9 North Sea herring input data. IBTSQ1 survey index at age. This index is normalized Using the data from DATRAS following the method described in the stock annex**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/survey_ibts_q1.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.10 North Sea herring input data. IBTSQ3 survey index at age. This index is normalized Using the data from DATRAS following the method described in the stock annex**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/survey_ibts_q3.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.11 North Sea herring input data. LAI index from the IHLS larvae survey for the Southern North Sea component (Downs). The columns corresponds to survey time windows: 0=16-31Dec, 1=01-15Jan, 2=16-31Jan.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/survey_lai_sns.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.12 North Sea herring input data. LAI index from the IHLS larvae survey for the Central North Sea component (Banks). The columns corresponds to survey time windows in: 0=01-15Sep, 1=16-30Sep, 2=01-15Oct, 3=16-31Oct.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/survey_lai_cns.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.13 North Sea herring input data. LAI index from the IHLS larvae survey for the Bunchan component. The columns corresponds to survey time windows in: 0=01-15Sep, 1=16-30Sep.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/survey_lai_bun.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.1.14 North Sea herring input data. LAI index from the IHLS larvae survey for the Orkney/Shetland component. The columns corresponds to survey time windows in: 0=01-15Sep, 1=16-30Sep.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('data/survey_lai_orsh.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Section 2.6.2 Single fleet assessment**
+
+**Table 2.6.2.1 North Sea herring single fleet assessment. observation variance per data source and at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+df.temp <- as.data.frame(obs.var(NSH.sam))
+row.names(df.temp) <- NULL
+
+pander::pandoc.table(df.temp,
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.2.2 North Sea herring single fleet assessment. Catchabilities at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+df.temp <- as.data.frame(catchabilities(NSH.sam))
+row.names(df.temp) <- NULL
+
+pander::pandoc.table(df.temp,
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.2.3 North Sea herring single fleet assessment. Numbers at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/natage_sf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.2.4 North Sea herring single fleet assessment. Harvest at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/fatage_sf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.2.5 North Sea herring single fleet assessment. Analytical retrospective (Mohn Rho).**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/mohn_rho_sf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+**Table 2.6.2.6 North Sea herring single fleet assessment. Assessment summary.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/summary_sf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+**Table 2.6.2.7 North Sea herring single fleet assessment. SAM model control object.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+print(NSH.ctrl)
+
+```
+
+\newpage
+
+**Section 2.6.3 Multi fleet assessment**
+
+
+**Table 2.6.3.1 North Sea herring multi fleet assessment. observation variance per data source and at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+df.temp <- as.data.frame(obs.var(NSH3f.sam))
+row.names(df.temp) <- NULL
+
+pander::pandoc.table(df.temp,
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.3.2 North Sea herring multi fleet assessment. Catchabilities at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+df.temp <- as.data.frame(catchabilities(NSH3f.sam))
+row.names(df.temp) <- NULL
+
+pander::pandoc.table(df.temp,
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.3.3 North Sea herring multi fleet assessment. Numbers at age.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/natage_mf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.3.4 North Sea herring multi fleet assessment. Harvest at age fleet A.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/fatage_A_mf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.3.5 North Sea herring multi fleet assessment. Harvest at age combined fleet B-D.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/fatage_BD_mf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.3.6 North Sea herring multi fleet assessment. Harvest at age fleet C.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/fatage_C_mf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.3.7 North Sea herring multi fleet assessment. Assessment summary.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('output/summary_mf.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.6.3.8 North Sea herring multi fleet assessment. SAM model control object.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+print(NSH3.ctrl)
+
+```
+
+\newpage
+
+**Section 2.7.1 Short term forecast results**
+
+**Table 2.7.1. North Sea herring. Intermediate year (2024) assumptions for the stock.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+df.temp <- as.data.frame(t(read.csv('../2024_her.27.3a47d_forecast/report/ImY_assumptions.csv',check.names = FALSE)))
+colnames(df.temp)   <- 'value'
+df.temp$description <- c(paste0('Fages (wr) 2–6',range(NSH)['maxyear']+1,')'),
+                         paste0('SSB',range(NSH)['maxyear']+1,')'),
+                         paste0('Rage (wr) 0 (',range(NSH)['maxyear']+1,')'),
+                         paste0('Rage (wr) 0 (',range(NSH)['maxyear']+2,')'),
+                         paste0('Total catch',range(NSH)['maxyear']+1,')'))
+#df.temp$basis       <- c(paste0('Based on estimated catch',range(NSH)['maxyear']+1,')'),
+#                         'Calculated based on catch constraint (in tonnes)',
+#                         'Estimated by assessment model (in thousands)',
+#                         paste0('Weighted mean over ',range(NSH)['maxyear']+1-10,'-',range(NSH)['maxyear']+1,'(in thousands)'),
+                         #'Estimated realized catch of autumn spawning herring de- rived from agreed TACs for A-D fleets, the proportion of NSAS herring in the catch (for A, C and D fleets), the transfer of TAC to the North Sea (C fleet) and the uptake of the by- catch quota (for B and D fleets).')
+
+rownames(df.temp) <- NULL
+
+pander::pandoc.table(df.temp,
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+**Table 2.7.2. North Sea herring. Intermediate year (2024) results.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('../2024_her.27.3a47d_forecast/report/ImY_table.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+**Table 2.7.3. North Sea herring. reference points.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(rpAll,
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+**Table 2.7.4. North Sea herring. TACs to catches variables.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+df.temp <- as.data.frame(unlist(TAC_var),nrow=length(TAC_var), byrow=FALSE)
+colnames(df.temp)   <- 'value'
+df.temp$description <- c('C-fleet transfer forecast year',
+                         'C-fleet transfer intermediate year',
+                         'D-fleet transfer intermediate year',
+                         'C-fleet NSAS/WBSS split',
+                         'D-fleet NSAS/WBSS split',
+                         'WBSS/NSAS split in the north sea',
+                         'B-fleet uptake',
+                         'D-fleet uptake',
+                         'C-fleet share of EU in 3a',
+                         'D-fleet share of EU in 3a',
+                         'D-fleet transfer forecast year')
+df.temp$basis       <- c('Value for the forecast year',
+                         'Value for the Intermediate year',
+                         'Value for the Intermediate year',
+                         'Average over the last 3 years',
+                         'Average over the last 3 years',
+                         'Average over the last 3 years',
+                         'Value from the terminal year',
+                         'Value from the terminal year',
+                         'Value from the terminal year',
+                         'Value from the terminal year',
+                         'Value from the intermediate year')
+
+rownames(df.temp) <- NULL
+
+pander::pandoc.table(df.temp,
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.7.4. North Sea herring. All scenarios following WBSS TAC advice.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('../2024_her.27.3a47d_forecast/output/forecast_2024.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.7.5. North Sea herring. All scenarios with status quo in C-D fleet  cathes.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('../2024_her.27.3a47d_forecast/output/forecast_2024_CDsq.csv',check.names =
+                                              FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
+\newpage
+
+**Table 2.7.6. North Sea herring. Final scenario table.**
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+pander::pandoc.table(as.data.frame(read.csv('../2024_her.27.3a47d_forecast/report/forecast_final.csv',check.names = FALSE)),
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+```
+
