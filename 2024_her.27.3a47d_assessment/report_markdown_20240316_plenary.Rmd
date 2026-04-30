@@ -1,0 +1,278 @@
+---
+title: "HAWG2024 - NSAS assessment and forecast"
+author: Benoit Berges
+output:
+  slidy_presentation: default
+  beamer_presentation: default
+date: "2024-03-16"
+---
+
+```{r setup, include=FALSE}
+
+library(knitr)
+knitr::opts_chunk$set(comment = NA)
+
+rm(list=ls())
+
+library(icesTAF)
+
+taf.library(FLCore)
+taf.library(stockassessment)
+taf.library(FLSAM)
+
+library(tidyverse)
+library(icesSAG)  # install.packages("icesSAG")
+library(pander)
+
+model.path      <- file.path(".",'model')
+output.path      <- file.path(".",'output')
+report.path      <- file.path(".","report")
+
+# Data settings
+
+# single fleet data
+runName <- 'NSAS_HAWG2024'
+wg      <- "HAWG2024"
+
+load(file.path(model.path,paste0(runName,'_sf.RData')))
+name(NSH) <- runName
+
+# multifleet data
+load(file.path(model.path,paste0(runName,'_mf.RData')))
+
+load('../2024_her.27.3a47d_forecast/data/input_2024.RData')
+
+rpIBP2021   <- data.frame(refpoint = c("fmsy",'Fsq','Flim','Fpa',"Blim",'Bpa',"msyBtrigger"),
+                      value    = c(0.31,NA,0.4,0.31,874198,956483,1232828),
+                      wg       = rep("IBPNSherring2021", 7))
+
+rpWKPELA2018   <- data.frame(refpoint = c("fmsy",'Fsq','Flim','Fpa',"Blim",'Bpa',"msyBtrigger"),
+                      value    = c(0.26,NA,0.34,0.30,800000,900000,1400000),
+                      wg       = rep("WKPELA2018", 7))
+
+rpAll <- rbind(rpIBP2021,rpWKPELA2018)
+
+rpAll <- rpAll %>% pivot_wider(names_from = refpoint,values_from = value)
+
+panderOptions('keep.line.breaks', TRUE)
+```
+
+## NSAS assessment background
+
+- Catch data from four fleets:
+  * A-fleet: human consumption in the North Sea and Eastern Channel
+  * B-fleet: bycatch of herring (in the sprat fishery) in the North Sea
+  * C-fleet: human consumption in IIIa
+  * D-fleet: bycatch of herring (in the sprat fishery) in IIIa
+- Main assessment is single fleet
+- Multi-fleet assessment (joining fleet B and D) ran in parallel to inform one on selectivity patterns
+- 5 surveys providing data to the assessment:
+  * LAI (early larvae index)
+  * IBTS0 (late larvae index)
+  * IBTSQ1 (trawl survey quarter 1) - modelled
+  * IBTSQ3 (trawl survey quarter 3) - modelled
+  * HERAS (acoustic survey)
+- ICES WKs
+  * WKPELA (2018)
+  * WKNSMSE (2018)
+  * IBPNSHerring (2021)
+  * WKMSEHerring (2024-)
+  
+History of catches
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('../2024_her.27.3a47d_forecast/report', "catch_TAC.png")) 
+```
+
+## Input data - Age 1 indices
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/input', "input_overlay_survey_series_age_1.png")) 
+```
+
+## New M - decade average 2016-2023 SMS runs
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/new_natmort',"new_natmort_M decades2_subset.png"))
+```
+
+## New M SF - assessment profiling
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf_scanM',"sf_scanM_profiling.png"))
+```
+
+## New M SF - input to the assessment
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf',"sf_M smooth.png"))
+```
+
+## New M SF - impact on the assessment
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf',"sf_explo_stock_trajectory_SMS2019-2023.png"))
+```
+
+## SF - obs.var
+
+HAWG2024
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf', "sf_observation_var_by_source.png")) 
+```
+
+HAWG2023
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('../2023_her.27.3a47d_assessment/report', "sf_observation_var_by_source.png"))
+```
+
+## SF - residuals
+```{r, echo=FALSE, out.width="50%", fig.align = "center", fig.show='hold'}
+knitr::include_graphics(c(file.path('./report/sf', "sf_HERAS_residuals.png"),
+                          file.path('./report/sf', "sf_IBTSQ1_residuals.png"),
+                          file.path('./report/sf', "sf_IBTSQ3_residuals.png"),
+                          file.path('./report/sf', "sf_catage_residuals.png")))
+```
+
+## SF - spawning components
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf', "sf_component_proportions.png")) 
+```
+
+## SF - stock trajectory
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf', "sf_stock_trajectory.png")) 
+```
+
+## SF - retrospective
+```{r, echo=FALSE, out.width="50%", fig.align = "center", fig.show='hold'} 
+knitr::include_graphics(file.path('./report/sf', "sf_retrospective_stock.png"))
+
+pander::pandoc.table(read.csv(file.path(output.path,'mohn_rho_sf.csv')),
+                     style="simple", split.tables=200, justify="right", missing=".")
+```
+
+## MF - issues with configuration
+
+- MF model introduced at WKPELA2018
+- MF model is broken down in a SF component (1947-1996) and MF component (1997-)
+- The MF model had convergence issues since the beginning
+- One tweaked model configuration almost yearly
+- Severe convergence issues in 2024 again... Did not manage to make the model converge
+
+## MF - config changes
+
+- Now having the 1947-1996 as multi-fleet, more specifically
+  * SF yearly catch at age is broken down by 1996 fleet proportions
+  * 1996 catch weights by fleet are used
+- The model is much more stable, all model configs and retro peels now  convergence
+- I reverted to the IBP 2021 configuration for consistency
+
+## MF - fleet proportions
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/mf',"mf_fleet.prop.png"))
+```
+
+## MF - retrospective
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/mf', "mf_retrospective_stock.png"))
+```
+
+## MF - MF vs SF
+2000 onward
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/mf', "mf_comp_models recent.png")) 
+```
+
+## Reference points - S-R HAWG2024 vs IBP2021
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf', "sf_SR_comp.png")) 
+```
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf', "sf_SR_comp_recent.png")) 
+```
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./refpoints/plots', "refpointsBlim_NSAS_HAWG2024_sf.png")) 
+```
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./refpoints/plots', "refpointsBlim_NSAS_HAWG2024_sf_HAWG2023.png")) 
+```
+
+## Reference points - HAWG2024
+
+```{r echo=FALSE} 
+pander::pandoc.table(read.csv(file.path('refpoints','output','refpoints_summary.csv')),
+                     style="simple", split.tables=200, justify="right", missing=".")
+```
+
+## Reference points - retrospective
+
+```{r echo=FALSE} 
+pander::pandoc.table(read.csv(file.path('refpoints','output','NSAS_HAWG2024_sf_retro.csv')),
+                     style="simple", split.tables=200, justify="right", missing=".")
+```
+
+## Forecast - intermediate year
+Intermediate year assumptions
+
+```{r echo=FALSE} 
+pander::pandoc.table(read.csv(file.path('../2024_her.27.3a47d_forecast/report','ImY_assumptions.csv')),
+                     style="simple", split.tables=200, justify="right", missing=".")
+```
+
+Intermediate year results
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE} 
+pander::pandoc.table(read.csv(file.path('../2024_her.27.3a47d_forecast/report','ImY_table.csv')),
+                     style="simple", split.tables=200, justify="right", missing=".")
+```
+
+## Forecast - catch scenarios
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE} 
+pander::pandoc.table(read.csv(file.path('../2024_her.27.3a47d_forecast/report','forecast_final.csv'))[1:7],
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+pander::pandoc.table(read.csv(file.path('../2024_her.27.3a47d_forecast/report','forecast_final.csv'))[c(1,8:14)],
+                     style="simple", split.tables=200, justify="right", missing=".")
+
+pander::pandoc.table(read.csv(file.path('../2024_her.27.3a47d_forecast/report','forecast_final.csv'))[c(1,15:17)],
+                     style="simple", split.tables=200, justify="right", missing=".")
+```
+
+## Forecast - forecast options
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('../2024_her.27.3a47d_forecast/report', "ssb_forecast_options.png")) 
+```
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('../2024_her.27.3a47d_forecast/report', "catch_forecast_options.png")) 
+```
+
+## Forecast - why a decrease in catch advice?
+
+Now on the slope
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('../2024_her.27.3a47d_forecast/report', "FMSYAR.png")) 
+```
+
+Different outlook on SSB
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('../2024_her.27.3a47d_forecast/report', "SSB_comp.png")) 
+```
+
+Projection of 2022 yearclass
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('../2024_her.27.3a47d_forecast/report', "ssb_at_age.png")) 
+```
+
+Impactful IBTS-Q1 2024 drop in age 1
+
+```{r echo=FALSE} 
+knitr::include_graphics(file.path('./report/sf', "sf_explo_stock_trajectory_drop IBTSQ1 age 1.png")) 
+```

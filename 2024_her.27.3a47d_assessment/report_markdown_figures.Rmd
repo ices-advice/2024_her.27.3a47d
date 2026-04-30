@@ -1,0 +1,382 @@
+---
+output:
+  word_document:
+    reference_docx: report_template_v1.5.dotx
+  pdf_document: default
+---
+  
+```{r setup, include=FALSE}
+
+# ------------------------------------------------------------------------------
+# 20/03/2024 Updated for HAWG 2023 (FB); Rmarkdown. 
+# ------------------------------------------------------------------------------
+library(knitr)
+knitr::opts_chunk$set(comment = NA)
+
+library(icesTAF)
+
+taf.library(FLCore)
+taf.library(stockassessment)
+taf.library(FLSAM)
+
+library(tidyverse)
+library(icesSAG)  # install.packages("icesSAG")
+#library(fishvice) # devtools::install_github("einarhjorleifsson/fishvice")
+
+model.path      <- file.path(".",'model')
+output.path      <- file.path(".",'output')
+report.path      <- file.path(".","report")
+
+# Data settings
+
+# single fleet data
+runName <- 'NSAS_HAWG2024'
+wg      <- "HAWG2024"
+load(file.path(model.path,paste0(runName,'_sf.RData')))
+name(NSH) <- runName
+
+# multifleet data
+load(file.path(model.path,paste0(runName,'_mf.RData')))
+name(NSH3f) <- runName
+
+rp2024   <- data.frame(refpoint = c("fmsy","blim","msybtrigger"),
+                       variable = c("fbar","ssb","ssb"),
+                       value    = c(0.32,828874, 1131601),
+                       wg       = rep(wg, 3))
+
+
+
+```
+
+**Section 2.6.1 Input data**
+  
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE} 
+knitr::include_graphics(file.path(report.path,'input',"input_maturity.png")) 
+```
+
+**Figure 2.6.1.1. North Sea Herring. Time-series of proportion mature at ages 0 to 8+ as used in the North Sea herring assessment.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE} 
+knitr::include_graphics(file.path(report.path,'input', "input_wstock_timeseries.png")) 
+```
+
+**Figure 2.6.1.2. North Sea Herring. Time-series of stock weight at ages 0 to 8+ as used in the North Sea herring assessment.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE} 
+knitr::include_graphics(file.path(report.path,'input', "input_wcatch_timeseries.png")) 
+```
+
+**Figure 2.6.1.3. North Sea Herring. Time-series of catch weight at ages 0 to 8+ as used in the North Sea herring assessment.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'input', "input_natmort.png"))
+```
+
+**Figure 2.6.1.4. North Sea Herring. Time-series of absolute natural mortality values at age 0–8+ as used in the North Sea herring assessment. Natural mortality values are based on the 2023 North Sea key-run (ICES WGSAM, 2024)**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'input', "input_prop_catches.png"))
+```
+
+**Figure 2.6.1.5. North Sea Herring. Proportion of catch at age since 2000.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'input', "input_prop_HERAS.png"))
+```
+
+**Figure 2.6.1.6. North Sea Herring. Proportion of HERAS index at age since 2000.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'input', "input_HERAS_internal_consistency.png"))
+```
+
+**Figure 2.6.1.7. North Sea herring. Internal consistency plot of the acoustic survey (HERAS). Above the diagonal the linear regression is shown including the observations (in points) while under the diagonal the r2 value that is associated with the linear regression is given.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'input', "input_IBTSQ3_internal_consistency.png"))
+```
+
+**Figure 2.6.1.8. North Sea herring. Internal consistency plot of the IBTS in quarter 3. Above the diagonal the linear regres- sion is shown including the observations (in points) while under the diagonal the r2 value that is associated with the linear regression is given.**
+  
+  \newpage
+
+**Section 2.6.2 Single fleet assessment**
+  
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_stock_trajectory.png"))
+```
+
+**Figure 2.6.2.1. North Sea herring. Stock summary plot of North Sea herring with associated uncertainty for SSB (top panel), F ages 2–6 (middle panel) and recruitment (bottom panel).**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_catage_residuals.png"))
+```
+
+**Figure 2.6.2.2. North Sea herring. Bubble plot of standardized catch residual at age.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_HERAS_residuals.png"))
+```
+
+**Figure 2.6.2.3. North Sea herring. Bubble plot of standardized acoustic survey residuals at age.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_IBTSQ1_residuals.png"))
+```
+
+**Figure 2.6.2.4. North Sea herring. Bubble plot of standardized IBTSQ1 residuals at age.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_IBTSQ3_residuals.png"))
+```
+
+**Figure 2.6.2.5. North Sea herring. Bubble plot of standardized IBTSQ3 residuals at age.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_observation_var_by_source.png"))
+```
+
+**Figure 2.6.2.6. North Sea herring. Observation variance by data source as estimated by the assessment model. Observation variance is ordered from least (left) to most (right). Colours indicate the different data sources. Observation variance is not individually estimated for each data source thereby reducing the parameters needed to be estimated in the assessment model. In these cases of parameter bindings, observation variances have equal values.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_variance_vs_uncertainty.png"))
+```
+
+**Figure 2.6.2.7. North Sea herring. Observation variance by data source as estimated by the assessment model plotted against the CV estimate of the observation variance parameter.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_survey_catchability.png"))
+```
+
+**Figure 2.6.2.8. North Sea herring. Catchability at age for the HERAS and IBTSQ3 surveys.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_retrospective_stock.png"))
+```
+
+**Figure 2.6.2.9. North Sea herring. Assessments retrospective pattern of SSB (top panel) F (middle panel) and recruitment (bottom panel).**
+
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_cor_params.png"))
+```
+
+**Figure 2.6.2.11. North Sea herring. Correlation plot of the FLSAM assessment model with the final set of parameters estimated in the model. The diagonal represents the correlation with the data source itself.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_selectivity.png"))
+```
+
+**Figure 2.6.2.12. North Sea herring. Fishing selectivity by pentad.**
+  
+  \newpage
+
+**Section 2.6.3 Multi fleet assessment**
+  
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_stock_trajectory.png"))
+```
+
+**Figure 2.6.3.1 North Sea herring multi-fleet model. Stock summary plot with associated uncertainty for SSB (top panel), F ages 2–6 (middle panel) and recruitment (bottom panel).**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_comp_models recent.png"))
+```
+
+**Figure 2.6.3.2 North Sea herring multi-fleet model. Comparison between single fleet and multi-fleet assessment models for SSB (top panel), F ages 2–6 (middle panel) and recruitment (bottom panel).**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_catage_residuals_A.png"))
+```
+
+**Figure 2.6.3.3. North Sea herring multifleet assessment model. Bubble plot of standardized residuals for catches of fleet A.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_catage_residuals_BD.png"))
+```
+
+**Figure 2.6.3.4. North Sea herring multifleet assessment model. Bubble plot of standardized residuals for catches of fleet B&D.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_catage_residuals_C.png"))
+```
+
+**Figure 2.6.3.5. North Sea herring multifleet assessment model. Bubble plot of standardized residuals for catches of fleet C.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_observation_var_by_source.png"))
+```
+
+**Figure 2.6.3.6. North Sea herring multi-fleet assessment model. Observation variance by data source as estimated by the assessment model. Observation variance is ordered from least (left) to most (right). Colours indicate the different data sources. Observation variance is not individually estimated for each data source thereby reducing the parameters needed to be estimated in the assessment model. In these cases of parameter bindings, observation variances have equal values.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_variance_vs_uncertainty.png"))
+```
+
+**Figure 2.6.3.7. North Sea herring multifleet assessment model. Observation variance by data source as estimated by the assessment model plotted against the CV estimate of the observation variance parameter.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_cor_params.png"))
+```
+
+**Figure 2.6.3.8. North Sea multifleet assessment model. Correlation plot of the FLSAM assessment model with the final set of parameters estimated in the model. The diagonal represents the correlation with the data source itself.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_retrospective_stock.png"))
+```
+
+**Figure 2.6.3.9. North Sea herring multifleet assessment model. Assessments retrospective pattern of SSB (top panel) F (middle panel) and recruitment (bottom panel).**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_selectivity_recent_A.png"))
+```
+
+**Figure 2.6.3.10. North Sea herring multifleet assessment model. Fishing selectivity fleet A.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_selectivity_recent_BD.png"))
+```
+
+**Figure 2.6.3.11. North Sea herring multifleet assessment model. Fishing selectivity fleet B and D combined.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'mf', "mf_selectivity_recent_C.png"))
+```
+
+**Figure 2.6.3.12. North Sea herring multifleet assessment model. Fishing selectivity fleet C.**
+  
+  \newpage
+
+**Section 2.7.1 Short term forecast results**
+  
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path("../2024_her.27.3a47d_forecast/report/FMSYAR.png"))
+```
+
+**Figure 2.7.1.1. North Sea herring. FMSY advice rule and SSB/Fbar data point since 2018.**
+  
+  \newpage
+
+**Section 2.7.2 Short term forecast projections**
+  
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path("../2024_her.27.3a47d_forecast/report/SSB_comp.png"))
+```
+
+**Figure 2.7.2.1. North Sea herring. comparison of SSB trajectory between short term forecasts applied to HAWG2023 and HAWG2024 data. oY: old years (prior to data year). DtY: data year. ImY: intermadiate year. FcY: forecast year. CtY: continuation year.**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path("../2024_her.27.3a47d_forecast/report/catch_age.png"))
+```
+
+**Figure 2.7.2.2. North Sea Herring. Realized and projected catch (in weight) by age (wr) between 2022 assessment (2023 as forecast year), 2023 assessment (2024 as forecast year) and 2024 assessment (2025 as forecast year).**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path("../2024_her.27.3a47d_forecast/report/catch_proportions.png"))
+```
+
+**Figure 2.7.2.3. North Sea Herring. Catch proportions for the different ages between the 2022 short-term forecast (2023 as forecast year), 2023 short-term forecast (2024 as forecast year) and 2024 short term forecast (2025 as forecast year).**
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path("../2024_her.27.3a47d_forecast/report/stf_MSYAR_projection.png"))
+```
+
+**Figure 2.7.2.4. North Sea Herring. Short-term projections using an F status quo from TAC year (i.e. advice year). Intermediate year is in 2024 and the TAC year is 2025**
+  
+  
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+
+# Need to add the years to the graph!!
+
+#knitr::include_graphics(file.path(report.path, "32_component_proportions.png"))
+```
+
+
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_SR_periods.png"))
+```
+
+**Figure 2.13.1. North Sea Autumn Spawning Herring stock recruitment curve, plotting estimated spawning-stock biomass against the resulting recruitment. Year classes spawned after 2001 (blue) highlight the years of recent low recruitment. The most recent year class is plotted grey.**
+
+
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_recruit_spawners.png"))
+```
+
+**Figure 2.13.2. North Sea Autumn Spawning Herring time-series of recruits per spawner (RPS). RPS is calculated as the estimated number of recruits from the assessment divided by the estimated number of mature fish at the time of spawning and is plotted against the year in which spawning occurred. Blue points: RPS in a given year. Black line: Smoother to aid visual interpretation. Note the logarithmic scale on the vertical axis.**
+
+
+  \newpage
+
+```{r echo=FALSE, fig.align="center", fig.asp=0.6, message=FALSE, warning=FALSE}
+knitr::include_graphics(file.path(report.path,'sf', "sf_larval_survival.png"))
+```
+
+**Figure 2.13.3. North Sea Autumn Spawning Herring time-series of larval survival ratio (Dickey-Collas & Nash, 2005; Payne et al., 2009) for the total(blue) and for the northern-most spawning components (Banks, Buchan, Orkney-Shetland; red), defined as the ratio of the SSB larval index (representing larvae less than 10–11 mm) and the IBTS0 index (representing the late larvae, > 18 mm). Survival ratio is plotted against the year in which the larvae are spawned.**
